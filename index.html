@@ -59,41 +59,37 @@
         .wake-img { width: 100%; height: 300px; object-fit: cover; filter: saturate(0.25) contrast(1.15) brightness(1.1); border-radius: 8px; }
 
         /* EYE OPEN REVEAL */
-        @keyframes eyelidOpen {
-            0% { transform: scaleY(1); }
-            5% { transform: scaleY(0.97); }
-            100% { transform: scaleY(0); }
+        @keyframes eyeOvalBlink {
+            0% { width: 0; height: 0; }
+            10% { width: 35vw; height: 22vh; }
+            18% { width: 0; height: 0; }
+            30% { width: 55vw; height: 38vh; }
+            40% { width: 3vw; height: 2vh; }
+            60% { width: 80vw; height: 60vh; }
+            68% { width: 10vw; height: 6vh; }
+            85% { width: 250vw; height: 250vh; }
+            100% { width: 250vw; height: 250vh; }
         }
         @keyframes eyeBlur {
-            0% { filter: blur(18px) brightness(2.2) saturate(0); }
-            30% { filter: blur(8px) brightness(1.5) saturate(0.1); }
-            70% { filter: blur(3px) brightness(1.2) saturate(0.2); }
+            0% { filter: blur(20px) brightness(2.5) saturate(0); }
+            18% { filter: blur(20px) brightness(2.5) saturate(0); }
+            30% { filter: blur(10px) brightness(1.6) saturate(0.1); }
+            40% { filter: blur(10px) brightness(1.6) saturate(0.1); }
+            60% { filter: blur(4px) brightness(1.2) saturate(0.2); }
+            68% { filter: blur(4px) brightness(1.2) saturate(0.2); }
+            85% { filter: blur(0px) brightness(1.1) saturate(0.25) contrast(1.15); }
             100% { filter: blur(0px) brightness(1.1) saturate(0.25) contrast(1.15); }
         }
         .wake-fullscreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 140; background: #000; }
-        .wake-fullscreen img { width: 100%; height: 100%; object-fit: cover; animation: eyeBlur 5s ease-out forwards; }
-        .eyelid { position: fixed; left: 0; width: 100%; z-index: 145; pointer-events: none; overflow: hidden; }
-        .eyelid-top {
-            top: 0; height: 50%;
-            transform-origin: top center;
-            animation: eyelidOpen 4.5s cubic-bezier(0.22, 0.6, 0.36, 1) forwards;
-        }
-        .eyelid-top-inner {
-            width: 100%; height: 100%;
-            background: #000;
-            border-radius: 0 0 50% 50% / 0 0 30% 30%;
-            box-shadow: 0 30px 80px 30px rgba(0,0,0,0.9);
-        }
-        .eyelid-bot {
-            bottom: 0; height: 50%;
-            transform-origin: bottom center;
-            animation: eyelidOpen 4.5s cubic-bezier(0.22, 0.6, 0.36, 1) forwards;
-        }
-        .eyelid-bot-inner {
-            width: 100%; height: 100%;
-            background: #000;
-            border-radius: 50% 50% 0 0 / 30% 30% 0 0;
-            box-shadow: 0 -30px 80px 30px rgba(0,0,0,0.9);
+        .wake-fullscreen img { width: 100%; height: 100%; object-fit: cover; animation: eyeBlur 6s ease forwards; }
+        .eye-oval {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0; height: 0;
+            border-radius: 50%;
+            box-shadow: 0 0 80px 50px rgba(0,0,0,0.95), 0 0 0 100vmax rgba(0,0,0,0.98);
+            z-index: 145; pointer-events: none;
+            animation: eyeOvalBlink 6s ease forwards;
         }
         
         /* MID */
@@ -455,24 +451,18 @@
                 fullImg.innerHTML = '<img src="' + IMAGES.room21 + '" alt="Chambre"/>';
                 document.body.appendChild(fullImg);
 
-                // Paupières noires qui s'ouvrent
-                const top = document.createElement('div');
-                top.className = 'eyelid eyelid-top';
-                top.innerHTML = '<div class="eyelid-top-inner"></div>';
-                document.body.appendChild(top);
-                const bot = document.createElement('div');
-                bot.className = 'eyelid eyelid-bot';
-                bot.innerHTML = '<div class="eyelid-bot-inner"></div>';
-                document.body.appendChild(bot);
+                // Ovale noir — comme un œil qui cligne 3 fois
+                const oval = document.createElement('div');
+                oval.className = 'eye-oval';
+                document.body.appendChild(oval);
 
                 // Nettoyage et passage à la suite
                 setTimeout(() => {
-                    top.remove();
-                    bot.remove();
+                    oval.remove();
                     fullImg.remove();
                     gameState.phase = 7;
                     renderRoom();
-                }, 6000);
+                }, 7000);
             } else if (gameState.phase === 7) {
                 // Image réduite + bouton
                 content.innerHTML = `
