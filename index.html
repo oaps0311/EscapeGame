@@ -59,14 +59,42 @@
         .wake-img { width: 100%; height: 300px; object-fit: cover; filter: saturate(0.25) contrast(1.15) brightness(1.1); border-radius: 8px; }
 
         /* EYE OPEN REVEAL */
-        @keyframes eyelidTop { 0% { height: 52%; } 100% { height: 0%; } }
-        @keyframes eyelidBot { 0% { height: 52%; } 100% { height: 0%; } }
-        @keyframes eyeBlur { 0% { filter: blur(15px) brightness(2) saturate(0); } 40% { filter: blur(6px) brightness(1.4) saturate(0.15); } 100% { filter: blur(0px) brightness(1.1) saturate(0.25) contrast(1.15); } }
+        @keyframes eyelidOpen {
+            0% { transform: scaleY(1); }
+            5% { transform: scaleY(0.97); }
+            100% { transform: scaleY(0); }
+        }
+        @keyframes eyeBlur {
+            0% { filter: blur(18px) brightness(2.2) saturate(0); }
+            30% { filter: blur(8px) brightness(1.5) saturate(0.1); }
+            70% { filter: blur(3px) brightness(1.2) saturate(0.2); }
+            100% { filter: blur(0px) brightness(1.1) saturate(0.25) contrast(1.15); }
+        }
         .wake-fullscreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 140; background: #000; }
-        .wake-fullscreen img { width: 100%; height: 100%; object-fit: cover; animation: eyeBlur 4s ease-out forwards; }
-        .eyelid { position: fixed; left: 0; width: 100%; z-index: 145; pointer-events: none; }
-        .eyelid-top { top: 0; height: 52%; background: linear-gradient(to bottom, #000 60%, transparent); box-shadow: 0 20px 60px 20px rgba(0,0,0,0.8); animation: eyelidTop 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
-        .eyelid-bot { bottom: 0; height: 52%; background: linear-gradient(to top, #000 60%, transparent); box-shadow: 0 -20px 60px 20px rgba(0,0,0,0.8); animation: eyelidBot 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+        .wake-fullscreen img { width: 100%; height: 100%; object-fit: cover; animation: eyeBlur 5s ease-out forwards; }
+        .eyelid { position: fixed; left: 0; width: 100%; z-index: 145; pointer-events: none; overflow: hidden; }
+        .eyelid-top {
+            top: 0; height: 50%;
+            transform-origin: top center;
+            animation: eyelidOpen 4.5s cubic-bezier(0.22, 0.6, 0.36, 1) forwards;
+        }
+        .eyelid-top-inner {
+            width: 100%; height: 100%;
+            background: #000;
+            border-radius: 0 0 50% 50% / 0 0 30% 30%;
+            box-shadow: 0 30px 80px 30px rgba(0,0,0,0.9);
+        }
+        .eyelid-bot {
+            bottom: 0; height: 50%;
+            transform-origin: bottom center;
+            animation: eyelidOpen 4.5s cubic-bezier(0.22, 0.6, 0.36, 1) forwards;
+        }
+        .eyelid-bot-inner {
+            width: 100%; height: 100%;
+            background: #000;
+            border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+            box-shadow: 0 -30px 80px 30px rgba(0,0,0,0.9);
+        }
         
         /* MID */
         .mid { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; text-align: center; font-size: 1.3em; line-height: 1.8; max-width: 650px; margin: 0 auto; padding: 40px 20px; }
@@ -430,9 +458,11 @@
                 // Paupières noires qui s'ouvrent
                 const top = document.createElement('div');
                 top.className = 'eyelid eyelid-top';
+                top.innerHTML = '<div class="eyelid-top-inner"></div>';
                 document.body.appendChild(top);
                 const bot = document.createElement('div');
                 bot.className = 'eyelid eyelid-bot';
+                bot.innerHTML = '<div class="eyelid-bot-inner"></div>';
                 document.body.appendChild(bot);
 
                 // Nettoyage et passage à la suite
