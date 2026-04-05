@@ -203,10 +203,15 @@
         const IMAGES = {
             room21: "./Image/Chambre d'hôpital abandonnée pour un anniversaire.jpg",
             corridor: "./Image/Couloir hospitalier désert sous lumière froide.jpg",
+            corridorNight: "./Image/Couloir d'hôpital abandonné la nuit.png",
             aldwyn: "./Image/Docteur Aldwyn dans le couloir hospitalier.jpg",
             patient13: "./Image/Une chambre d'hôpital désordonnée.jpg",
+            note: "./Image/Note mystérieuse dans une chambre d'hôpital.png",
             pharmacy: "./Image/Pharmacie hospitalière stérile et organisée.jpg",
+            badge: "./Image/Badge hospitalière abandonnée dans déchetterie.png",
+            nurse: "./Image/Infirmière attentive derrière la vitre.png",
             office: "./Image/Bureau du Dr. Aldwyn et corridor hospitalier.jpg",
+            key: "./Image/Clé ancienne dans tiroir en bois.png",
             basement: "./Image/Couloir sombre vers la sortie de secours.jpg"
         };
 
@@ -589,7 +594,12 @@
                     ${createSceneImage(IMAGES.corridor, 'Couloir')}
                     <div class="content">
                         <p>Un long couloir blanc. Trois portes. Au bout, un poste d'infirmières — une silhouette derrière la vitre.</p>
-                        ${gameState.nurseAlert ? '<p class="alert">⚠️ L\'infirmière t\'a repéré. Dépêche-toi.</p>' : ''}
+                        ${gameState.nurseAlert ? `
+                            <div style="max-width:350px;margin:10px auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.2)">
+                                <img src="${IMAGES.nurse}" alt="Infirmière" style="width:100%;height:200px;object-fit:cover;filter:saturate(0.4) contrast(1.2)"/>
+                            </div>
+                            <p class="alert">⚠️ L'infirmière t'a repéré. Dépêche-toi.</p>
+                        ` : ''}
                         <div class="doors">
                             <div class="door-card" onclick="goToRoom('patient_room')">
                                 <span class="door-n">13</span>
@@ -648,6 +658,9 @@
                 content += `
                     <p>Il se retourne. Un sourire soulagé.</p>
                     <p class="mumble">"Le renard m'a dit que quelqu'un viendrait. Il m'a donné ça. Pour toi."</p>
+                    <div style="max-width:400px;margin:15px auto;border-radius:6px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15)">
+                        <img src="${IMAGES.note}" alt="Note" style="width:100%;object-fit:cover;filter:saturate(0.5) sepia(0.2)"/>
+                    </div>
                     <div class="note-box">
                         <p>"Pour ouvrir la porte qui ne s'ouvre pas,</p>
                         <p>cherche ce que tout le monde jette.</p>
@@ -761,10 +774,20 @@
             const code = gameState.pharmaCode.join('');
             if (code === '148') {
                 gameState.inventory.push('badge');
-                flash('🎫 Badge d\'accès trouvé dans la boîte !');
-                doEffect('glitch');
                 gameState.phase = 2;
-                renderRoom();
+                doEffect('glitch');
+                gameEl.querySelector('.content').innerHTML = `
+                    <div style="text-align:center;padding:20px">
+                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.2)">
+                            <img src="${IMAGES.badge}" alt="Badge" style="width:100%;object-fit:cover;filter:saturate(0.6) contrast(1.1)"/>
+                        </div>
+                        <p style="color:#4a4;font-weight:bold;font-size:1.1em;margin:15px 0">🎫 Badge d'accès trouvé dans la boîte !</p>
+                        <p class="hint-sm">Retourne dans le couloir.</p>
+                        <button class="btn-back" onclick="goToRoom('corridor_1')">← Retour</button>
+                    </div>
+                `;
+                updateInventory();
+                return;
             } else {
                 doEffect('shake');
                 flash('❌ Mauvaise combinaison.');
@@ -778,7 +801,7 @@
                         <h2>COULOIR — AILE OUEST</h2>
                         <p class="sub">Néons mourants. L'aile semble abandonnée.</p>
                     </div>
-                    ${createSceneImage(IMAGES.corridor, 'Couloir sombre', true)}
+                    ${createSceneImage(IMAGES.corridorNight, 'Couloir sombre', true)}
                     <div class="content">
                         <div class="doors">
                             <div class="door-card" onclick="goToRoom('office')">
@@ -847,7 +870,15 @@
                     </div>
                 `;
             } else if (gameState.phase === 2) {
-                content += '<p>Tu as la clé.</p><button class="btn-back" onclick="goToRoom(\'corridor_2\')">← Retour</button>';
+                content += `
+                    <div style="text-align:center">
+                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15)">
+                            <img src="${IMAGES.key}" alt="Clé" style="width:100%;object-fit:cover;filter:saturate(0.5) sepia(0.15)"/>
+                        </div>
+                        <p style="color:#4a4;font-weight:bold">🔑 Clé du sous-sol récupérée.</p>
+                        <button class="btn-back" onclick="goToRoom('corridor_2')">← Retour</button>
+                    </div>
+                `;
             }
             
             content += '</div></div>';
