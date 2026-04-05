@@ -59,14 +59,14 @@
         .wake-img { width: 100%; height: 300px; object-fit: cover; filter: saturate(0.25) contrast(1.15) brightness(1.1); border-radius: 8px; }
 
         /* EYE OPEN REVEAL */
-        @keyframes eyelidTop { 0% { height: 50%; } 100% { height: 0%; } }
-        @keyframes eyelidBot { 0% { height: 50%; } 100% { height: 0%; } }
+        @keyframes eyelidTop { 0% { height: 52%; } 100% { height: 0%; } }
+        @keyframes eyelidBot { 0% { height: 52%; } 100% { height: 0%; } }
         @keyframes eyeBlur { 0% { filter: blur(15px) brightness(2) saturate(0); } 40% { filter: blur(6px) brightness(1.4) saturate(0.15); } 100% { filter: blur(0px) brightness(1.1) saturate(0.25) contrast(1.15); } }
         .wake-fullscreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 140; background: #000; }
         .wake-fullscreen img { width: 100%; height: 100%; object-fit: cover; animation: eyeBlur 4s ease-out forwards; }
-        .eyelid { position: fixed; left: 0; width: 100%; background: #000; z-index: 145; pointer-events: none; }
-        .eyelid-top { top: 0; height: 50%; animation: eyelidTop 3.5s ease-in-out forwards; }
-        .eyelid-bot { bottom: 0; height: 50%; animation: eyelidBot 3.5s ease-in-out forwards; }
+        .eyelid { position: fixed; left: 0; width: 100%; z-index: 145; pointer-events: none; }
+        .eyelid-top { top: 0; height: 52%; background: linear-gradient(to bottom, #000 60%, transparent); box-shadow: 0 20px 60px 20px rgba(0,0,0,0.8); animation: eyelidTop 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+        .eyelid-bot { bottom: 0; height: 52%; background: linear-gradient(to top, #000 60%, transparent); box-shadow: 0 -20px 60px 20px rgba(0,0,0,0.8); animation: eyelidBot 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
         
         /* MID */
         .mid { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; text-align: center; font-size: 1.3em; line-height: 1.8; max-width: 650px; margin: 0 auto; padding: 40px 20px; }
