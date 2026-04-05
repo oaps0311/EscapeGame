@@ -52,7 +52,7 @@
         /* IMAGE */
         .scene-wrap { position: relative; width: 100%; overflow: hidden; }
         .scene-img { width: 100%; max-height: 450px; object-fit: contain; display: block; filter: saturate(0.6) contrast(1.1); }
-        .scene-dark-img { filter: saturate(0.3) brightness(0.6) contrast(1.2) !important; }
+        .scene-dark-img { filter: saturate(0.3) brightness(0.85) contrast(1.1) !important; }
         .scene-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(transparent, #f0f0f0); }
         .scene-fade-dark { background: linear-gradient(transparent, #000) !important; }
         .wake-img-wrap { max-width: 600px; margin: 0 auto 25px; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 40px rgba(255,255,255,0.1); }
@@ -168,6 +168,11 @@
         }
         
         .hidden { display: none; }
+
+        /* LIGHTBOX */
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 200; display: flex; align-items: center; justify-content: center; cursor: pointer; animation: fi 0.3s ease; padding: 20px; }
+        .lightbox img { max-width: 90%; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 50px rgba(0,0,0,0.8); }
+        .lightbox-hint { position: absolute; bottom: 20px; color: #888; font-size: 0.8em; font-family: 'Courier Prime', monospace; }
     </style>
 </head>
 <body>
@@ -183,6 +188,12 @@
     
     <!-- Message popup -->
     <div id="message" class="msg hidden"></div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt=""/>
+        <span class="lightbox-hint">Clique pour fermer</span>
+    </div>
 
     <script>
         // Game state
@@ -257,6 +268,15 @@
             messageEl.textContent = msg;
             messageEl.classList.remove('hidden');
             setTimeout(() => messageEl.classList.add('hidden'), 4000);
+        }
+
+        function showLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
         }
 
         function doEffect(effect, duration) {
@@ -501,16 +521,16 @@
         function renderAldwyn() {
             const content = document.createElement('div');
             content.className = 'scene-white';
-            
+
             if (gameState.phase === 0) {
                 content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
                 gameEl.innerHTML = '';
                 gameEl.appendChild(content);
-                typeWriter(document.getElementById('typewriter'), 'La porte s\'ouvre. Un homme se tient devant toi.', 75, () => {
+                typeWriter(document.getElementById('typewriter'), 'La porte s\'ouvre. Un homme se tient devant toi.', 90, () => {
                     setTimeout(() => {
                         gameState.phase = 1;
                         renderRoom();
-                    }, 3000);
+                    }, 3500);
                 });
             } else if (gameState.phase === 1) {
                 content.innerHTML = `
@@ -523,56 +543,77 @@
                 `;
                 gameEl.innerHTML = '';
                 gameEl.appendChild(content);
-                typeWriter(document.getElementById('typewriter'), 'Grand. Barbe longue, rousse et blanche. Cheveux aux épaules. Lunettes rondes. Blouse blanche.', 60, () => {
+                typeWriter(document.getElementById('typewriter'), 'Grand. Barbe longue, rousse et blanche. Cheveux aux épaules. Lunettes rondes. Blouse blanche.', 75, () => {
                     setTimeout(() => {
                         gameState.phase = 2;
                         renderRoom();
-                    }, 3000);
-                });
-            } else if (gameState.phase === 2) {
-                content.innerHTML = '<div class="fadein center-txt" style="padding:30px"><span id="typewriter"></span></div>';
-                gameEl.innerHTML = '';
-                gameEl.appendChild(content);
-                typeWriter(document.getElementById('typewriter'), '— Bonjour. Tu es enfin réveillé. Je suis le Docteur Aldwyn. Je te suis depuis le début.', 65, () => {
-                    setTimeout(() => {
-                        gameState.phase = 3;
-                        renderRoom();
                     }, 3500);
                 });
-            } else if (gameState.phase === 3) {
-                content.innerHTML = `
-                    <div class="fadein center-txt" style="padding:30px">
-                        <p style="font-style:italic">— La forêt. Les énigmes. Les sentiers. Les murmures.</p>
-                        <span id="typewriter"></span>
-                    </div>
-                `;
+            } else if (gameState.phase >= 2 && gameState.phase <= 4) {
+                const lines = [
+                    { text: '— Bonjour. Tu es enfin réveillé. Je suis le Docteur Aldwyn. Je te suis depuis le début.', speed: 55, wait: 4000 },
+                    { text: '— La forêt. Les énigmes. Les sentiers. Les murmures. Tout ça, c\'était dans ta tête. Tu es ici depuis... un moment.', speed: 50, wait: 4500 },
+                    { text: '— Le renard, c\'était moi. Je venais vérifier si tu te réveillais. La malle... c\'était ton esprit qui essayait de revenir.', speed: 50, wait: 4000 }
+                ];
+
+                const container = document.createElement('div');
+                container.className = 'fadein center-txt';
+                container.style.cssText = 'padding:30px;max-width:650px;margin:0 auto';
+
+                // Show all previous lines as already visible
+                for (let i = 0; i < gameState.phase - 2; i++) {
+                    const p = document.createElement('p');
+                    p.style.cssText = 'font-style:italic;margin-bottom:18px;line-height:1.8;opacity:0.7';
+                    p.textContent = lines[i].text;
+                    container.appendChild(p);
+                }
+
+                // Current line typed out
+                const current = document.createElement('p');
+                current.style.cssText = 'font-style:italic;margin-bottom:18px;line-height:1.8';
+                const tw = document.createElement('span');
+                tw.id = 'typewriter';
+                current.appendChild(tw);
+                container.appendChild(current);
+
+                content.innerHTML = '';
+                content.appendChild(container);
                 gameEl.innerHTML = '';
                 gameEl.appendChild(content);
-                typeWriter(document.getElementById('typewriter'), 'Tout ça, c\'était dans ta tête. Tu es ici depuis... un moment.', 70, () => {
+
+                const lineIndex = gameState.phase - 2;
+                const line = lines[lineIndex];
+                typeWriter(document.getElementById('typewriter'), line.text, line.speed, () => {
                     setTimeout(() => {
-                        gameState.phase = 4;
-                        renderRoom();
-                    }, 4000);
+                        if (gameState.phase < 4) {
+                            gameState.phase++;
+                            renderRoom();
+                        } else {
+                            gameState.phase = 5;
+                            renderRoom();
+                        }
+                    }, line.wait);
                 });
-            } else if (gameState.phase === 4) {
+            } else if (gameState.phase === 5) {
                 content.innerHTML = `
-                    <div class="fadein center-txt" style="padding:30px">
-                        <p style="font-style:italic">— Le renard, c'était moi. Je venais vérifier si tu te réveillais.</p>
-                        <p style="font-style:italic">— La malle... c'était ton esprit qui essayait de revenir.</p>
-                        <span id="typewriter"></span>
+                    <div class="fadein center-txt" style="padding:30px;max-width:650px;margin:0 auto">
+                        <p style="font-style:italic;margin-bottom:18px;line-height:1.8;opacity:0.7">— Bonjour. Tu es enfin réveillé. Je suis le Docteur Aldwyn. Je te suis depuis le début.</p>
+                        <p style="font-style:italic;margin-bottom:18px;line-height:1.8;opacity:0.7">— La forêt. Les énigmes. Les sentiers. Les murmures. Tout ça, c'était dans ta tête. Tu es ici depuis... un moment.</p>
+                        <p style="font-style:italic;margin-bottom:18px;line-height:1.8;opacity:0.7">— Le renard, c'était moi. Je venais vérifier si tu te réveillais. La malle... c'était ton esprit qui essayait de revenir.</p>
+                        <p id="typewriter-line" style="margin-bottom:18px;line-height:1.8"><span id="typewriter"></span></p>
                     </div>
                 `;
                 gameEl.innerHTML = '';
                 gameEl.appendChild(content);
                 typeWriter(document.getElementById('typewriter'), '— Et tu as réussi. Tu es là. Mais maintenant...', 70, () => {
                     setTimeout(() => {
-                        gameState.phase = 5;
+                        gameState.phase = 6;
                         renderRoom();
-                    }, 3000);
+                    }, 3500);
                 });
-            } else if (gameState.phase === 5) {
+            } else if (gameState.phase === 6) {
                 content.innerHTML = `
-                    <div class="fadein center-txt" style="padding:30px">
+                    <div class="fadein center-txt" style="padding:30px;max-width:650px;margin:0 auto">
                         <p style="color:#c00;font-weight:bold;font-size:1.2em">— ...il faut que tu sortes d'ici.</p>
                         <p style="color:#888;font-size:0.9em;margin-top:15px">Il se penche vers toi :</p>
                         <div class="note-box" style="margin-top:10px">"Tout le monde ici ne veut pas que tu partes. Fais attention."</div>
@@ -595,7 +636,7 @@
                     <div class="content">
                         <p>Un long couloir blanc. Trois portes. Au bout, un poste d'infirmières — une silhouette derrière la vitre.</p>
                         ${gameState.nurseAlert ? `
-                            <div style="max-width:350px;margin:10px auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.2)">
+                            <div style="max-width:350px;margin:10px auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.2);cursor:pointer" onclick="event.stopPropagation();showLightbox('${IMAGES.nurse}')">
                                 <img src="${IMAGES.nurse}" alt="Infirmière" style="width:100%;height:200px;object-fit:cover;filter:saturate(0.4) contrast(1.2)"/>
                             </div>
                             <p class="alert">⚠️ L'infirmière t'a repéré. Dépêche-toi.</p>
@@ -658,7 +699,7 @@
                 content += `
                     <p>Il se retourne. Un sourire soulagé.</p>
                     <p class="mumble">"Le renard m'a dit que quelqu'un viendrait. Il m'a donné ça. Pour toi."</p>
-                    <div style="max-width:400px;margin:15px auto;border-radius:6px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15)">
+                    <div style="max-width:400px;margin:15px auto;border-radius:6px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15);cursor:pointer" onclick="event.stopPropagation();showLightbox('${IMAGES.note}')">
                         <img src="${IMAGES.note}" alt="Note" style="width:100%;object-fit:cover;filter:saturate(0.5) sepia(0.2)"/>
                     </div>
                     <div class="note-box">
@@ -778,7 +819,7 @@
                 doEffect('glitch');
                 gameEl.querySelector('.content').innerHTML = `
                     <div style="text-align:center;padding:20px">
-                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.2)">
+                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.2);cursor:pointer" onclick="event.stopPropagation();showLightbox('${IMAGES.badge}')">
                             <img src="${IMAGES.badge}" alt="Badge" style="width:100%;object-fit:cover;filter:saturate(0.6) contrast(1.1)"/>
                         </div>
                         <p style="color:#4a4;font-weight:bold;font-size:1.1em;margin:15px 0">🎫 Badge d'accès trouvé dans la boîte !</p>
@@ -872,7 +913,7 @@
             } else if (gameState.phase === 2) {
                 content += `
                     <div style="text-align:center">
-                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15)">
+                        <div style="max-width:350px;margin:0 auto 15px;border-radius:8px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,0.15);cursor:pointer" onclick="event.stopPropagation();showLightbox('${IMAGES.key}')">
                             <img src="${IMAGES.key}" alt="Clé" style="width:100%;object-fit:cover;filter:saturate(0.5) sepia(0.15)"/>
                         </div>
                         <p style="color:#4a4;font-weight:bold">🔑 Clé du sous-sol récupérée.</p>
