@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Escape - The Forgotten Thicket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        .game {
+            min-height: 100vh;
+            font-family: 'Courier Prime', monospace;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+        
+        .game.glitch { animation: gx 0.3s; }
+        .game.black { background: #000 !important; color: transparent !important; }
+        .game.black * { color: transparent !important; border-color: transparent !important; opacity: 0; }
+        .game.shake { animation: sx 0.5s; }
+        
+        @keyframes gx {
+            0% { transform: translate(0); filter: hue-rotate(0deg) saturate(5); }
+            25% { transform: translate(-5px, 3px); filter: hue-rotate(90deg) saturate(10); }
+            50% { transform: translate(3px, -5px); filter: hue-rotate(180deg); }
+            75% { transform: translate(-3px, 5px); filter: hue-rotate(270deg); }
+            100% { transform: translate(0); filter: none; }
+        }
+        
+        @keyframes sx {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes fi { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bk { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes pg { 0%, 100% { box-shadow: 0 0 5px rgba(0,255,0,0.3); } 50% { box-shadow: 0 0 20px rgba(0,255,0,0.6); } }
+        @keyframes glitchText { 0% { text-shadow: 2px 0 #0ff, -2px 0 #f0f; } 25% { text-shadow: -2px 0 #0ff, 2px 0 #f0f; } 50% { text-shadow: 2px 2px #0ff, -2px -2px #f0f; } 75% { text-shadow: -2px 2px #0ff, 2px -2px #f0f; } 100% { text-shadow: 2px 0 #0ff, -2px 0 #f0f; } }
+        
+        .cursor { animation: bk 0.8s infinite; margin-left: 2px; }
+        .fadein { animation: fi 1s ease; }
+        
+        /* SCENES */
+        .scene-black { background: #000; color: #eee; min-height: 100vh; }
+        .scene-white { background: #f0f0f0; color: #1a1a1a; min-height: 100vh; }
+        .scene-grey { background: #ddd; color: #1a1a1a; min-height: 100vh; }
+        .scene-dark { background: #111; color: #eee; min-height: 100vh; }
+        .scene-forest { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #080808, #0a1a0a 30%, #1a2a1a 60%, #2a3a2a); color: #d4c9a8; padding: 40px 20px; }
+        
+        /* IMAGE */
+        .scene-wrap { position: relative; width: 100%; overflow: hidden; }
+        .scene-img { width: 100%; max-height: 450px; object-fit: contain; display: block; filter: saturate(0.6) contrast(1.1); }
+        .scene-dark-img { filter: saturate(0.3) brightness(0.6) contrast(1.2) !important; }
+        .scene-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(transparent, #f0f0f0); }
+        .scene-fade-dark { background: linear-gradient(transparent, #000) !important; }
+        .wake-img-wrap { max-width: 600px; margin: 0 auto 25px; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 40px rgba(255,255,255,0.1); }
+        .wake-img { width: 100%; height: 300px; object-fit: cover; filter: saturate(0.25) contrast(1.15) brightness(1.1); border-radius: 8px; }
+        
+        /* MID */
+        .mid { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; text-align: center; font-size: 1.3em; line-height: 1.8; max-width: 650px; margin: 0 auto; padding: 40px 20px; }
+        .red-text { color: #c00; text-shadow: 2px 0 #0ff, -2px 0 #f0f; animation: glitchText 0.1s infinite; }
+        .glitch-text { color: #fff; text-shadow: 2px 0 rgba(0,255,255,0.5), -2px 0 rgba(255,0,255,0.5); }
+        .center-txt { text-align: center; line-height: 1.8; }
+        
+        /* WAKE TEXT */
+        .wt { margin: 10px 0; font-size: 1.05em; opacity: 0; animation: fi 1s ease both; }
+        .wt1 { animation-delay: 0.3s; } .wt2 { animation-delay: 1s; } .wt3 { animation-delay: 1.7s; } .wt4 { animation-delay: 2.4s; }
+        
+        /* HEADER */
+        .hdr { text-align: center; padding: 30px 20px 15px; }
+        .hdr h2 { font-family: 'Special Elite', cursive; font-size: 1.8em; letter-spacing: 5px; color: #333; }
+        .hdr-light h2 { color: #ddd; }
+        .sub { font-size: 0.85em; color: #888; margin-top: 8px; font-style: italic; }
+        
+        /* CONTENT */
+        .content { max-width: 700px; margin: 0 auto; line-height: 1.8; padding: 20px; }
+        .content p { margin-bottom: 15px; }
+        .hint { color: #666; font-style: italic; font-size: 0.9em; border-left: 3px solid #ccc; padding-left: 15px; }
+        .hint-sm { color: #aaa; font-size: 0.8em; font-style: italic; text-align: center; margin-top: 15px; }
+        
+        /* CARDS */
+        .grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 25px 0; }
+        .card { padding: 18px; background: #fff; border: 2px solid #e0e0e0; cursor: pointer; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+        .card:hover { border-color: #555; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .card-found { border-color: #4a4; background: #f0fff0; }
+        .card-special { border-color: #c90; background: #fffbe6; margin: 15px 0; padding: 18px; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; transition: all 0.3s; }
+        .card-special:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .card-ico { font-size: 2em; }
+        .glow { position: absolute; top: 5px; right: 10px; animation: bk 1s infinite; }
+        
+        /* DARK PANEL */
+        .panel-dark { background: #0a0a0a; padding: 25px; margin: 25px 0; text-align: center; border: 1px solid #222; animation: pg 3s infinite; }
+        .green { color: #0f0; font-size: 0.9em; margin-bottom: 12px; }
+        .digits { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .digit { width: 52px; height: 62px; text-align: center; font-size: 1.5em; font-family: 'Courier Prime', monospace; background: #111; border: 2px solid #0f0; color: #0f0; outline: none; transition: all 0.2s; }
+        .digit:focus { box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        .btn-green { padding: 12px 35px; background: #0f0; color: #000; border: none; font-family: 'Courier Prime', monospace; font-size: 0.9em; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s; }
+        .btn-green:hover { background: #0c0; transform: scale(1.05); }
+        .input-dark { display: block; margin: 10px auto; padding: 12px 20px; font-family: 'Courier Prime', monospace; font-size: 1.1em; border: 2px solid #0f0; background: #111; color: #0f0; width: 220px; text-align: center; outline: none; }
+        .input-dark:focus { box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        .input-light { display: inline-block; padding: 12px 20px; font-family: 'Courier Prime', monospace; font-size: 1.1em; border: 2px solid #333; background: #f5f5f5; width: 200px; text-align: center; outline: none; }
+        .input-light:focus { border-color: #0f0; }
+        
+        /* DOORS */
+        .doors { display: flex; flex-direction: column; gap: 14px; margin: 25px 0; }
+        .door-card { padding: 22px; background: #fff; border: 3px solid #ccc; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.3s; }
+        .door-card.door-locked { border-color: #900; background: #fff5f5; }
+        .door-card.door-hover { border-color: #333; box-shadow: 0 8px 25px rgba(0,0,0,0.12); transform: translateY(-3px); }
+        .door-n { font-size: 1.5em; } .door-l { font-weight: bold; font-size: 1.05em; } .door-d { color: #888; font-size: 0.82em; font-style: italic; }
+        
+        /* DIALOG */
+        .dialog { background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid #333; }
+        .mumble { font-style: italic; color: #555; margin-bottom: 12px; }
+        .btn-choice { display: block; width: 100%; padding: 12px; margin: 8px 0; background: #fff; border: 2px solid #333; font-family: 'Courier Prime', monospace; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .btn-choice:hover { background: #333; color: #fff; }
+        .btn-wrong:hover { background: #900 !important; border-color: #900 !important; }
+        .note-box { background: #fffbe6; border-left: 4px solid #c90; padding: 15px; margin: 15px 0; font-style: italic; }
+        .alert { color: #c00; font-weight: bold; animation: bk 1s infinite; text-align: center; padding: 10px; background: #fff0f0; margin-bottom: 15px; }
+        
+        /* BUTTONS */
+        .btn-main { display: inline-block; padding: 15px 40px; background: #1a1a1a; color: #f8f8f8; border: none; font-family: 'Courier Prime', monospace; font-size: 1em; cursor: pointer; letter-spacing: 2px; text-transform: uppercase; transition: all 0.3s; }
+        .btn-main:hover { background: #333; transform: scale(1.05); }
+        .btn-appear { opacity: 0; animation: fi 1s ease 3.2s both; }
+        .btn-appear2 { opacity: 0; animation: fi 1s ease 6s both; }
+        .btn-back { display: block; margin: 25px auto; padding: 12px 30px; background: none; border: 2px solid #333; font-family: 'Courier Prime', monospace; cursor: pointer; transition: all 0.2s; }
+        .btn-back:hover { background: #333; color: #fff; }
+        
+        /* SWITCHES */
+        .switches { display: flex; justify-content: center; gap: 14px; margin: 25px 0; }
+        .sw { width: 62px; height: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; border: 3px solid #555; transition: all 0.2s; }
+        .sw-on { background: #ffe; border-color: #cc0; box-shadow: 0 0 15px rgba(255,255,0,0.3); }
+        .sw-off { background: #222; color: #666; }
+        .sw:hover { transform: scale(1.1); }
+        .sw-n { font-size: 1.2em; font-weight: bold; } .sw-s { font-size: 0.7em; text-transform: uppercase; }
+        .sw-on .sw-s { color: #990; }
+        .puzzle-hint { color: #aaa; font-style: italic; margin: 5px 0; font-size: 0.88em; }
+        
+        /* EXIT */
+        .exit-line { margin: 15px 0; font-size: 1.15em; font-style: italic; opacity: 0; animation: fi 1s ease both; }
+        .el1 { animation-delay: 0s; } .el2 { animation-delay: 1.5s; } .el3 { animation-delay: 3s; } .el4 { animation-delay: 4.5s; }
+        
+        /* FREEDOM */
+        .freedom { text-align: center; max-width: 600px; }
+        .f-sep { color: #3a3a2a; margin: 25px 0; font-size: 0.7em; letter-spacing: 3px; }
+        .f-line { margin: 18px 0; font-size: 1.1em; line-height: 1.6; animation: fi 1.5s ease both; }
+        .f-big { font-size: 1.7em; font-family: 'Special Elite', cursive; margin: 30px 0; }
+        .f-gold { color: #f4c430; text-shadow: 0 0 30px rgba(244,196,48,0.4); }
+        .f-sig { margin-top: 35px; color: #6a6a4a; font-style: italic; }
+        
+        /* MESSAGE */
+        .msg { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #111; color: #fff; padding: 15px 28px; font-family: 'Courier Prime', monospace; font-size: 0.88em; z-index: 100; max-width: 90%; text-align: center; animation: fi 0.3s ease; border-left: 4px solid #0f0; box-shadow: 0 5px 30px rgba(0,0,0,0.5); }
+        
+        /* INVENTORY */
+        .inv { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.88); color: #aaa; padding: 12px 16px; font-size: 0.72em; z-index: 50; font-family: 'Courier Prime', monospace; max-width: 190px; border: 1px solid #333; backdrop-filter: blur(5px); }
+        .inv h4 { color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85em; }
+        .inv-i { padding: 3px 0; color: #0f0; }
+        
+        @media(max-width: 600px) {
+            .grid4 { grid-template-columns: 1fr 1fr; }
+            .mid { font-size: 1em; padding: 20px 15px; }
+            .digit { width: 42px; height: 52px; }
+            .switches { gap: 5px; flex-wrap: wrap; }
+            .sw { width: 42px; height: 62px; }
+            .scene-img { height: 240px; }
+            .wake-img { height: 220px; }
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="game" class="game">
+        <!-- Content will be injected by JavaScript -->
+    </div>
+    
+    <!-- Inventory -->
+    <div id="inventory" class="inv hidden">
+        <h4>Inventaire</h4>
+        <div id="inventory-items"></div>
+    </div>
+    
+    <!-- Message popup -->
+    <div id="message" class="msg hidden"></div>
+
+    <script>
+        // Game state
+        const ROOMS = {
+            WAKE_UP: "wake_up",
+            ROOM: "room",
+            ALDWYN: "aldwyn",
+            CORRIDOR_1: "corridor_1",
+            PATIENT_ROOM: "patient_room",
+            PHARMACY: "pharmacy",
+            CORRIDOR_2: "corridor_2",
+            OFFICE: "office",
+            BASEMENT: "basement",
+            EXIT: "exit",
+            FREEDOM: "freedom"
+        };
+
+        const IMAGES = {
+            room21: "./Image/Chambre d'hôpital abandonnée pour un anniversaire.jpg",
+            corridor: "./Image/Couloir hospitalier désert sous lumière froide.jpg",
+            aldwyn: "./Image/Docteur Aldwyn dans le couloir hospitalier.jpg",
+            patient13: "./Image/Une chambre d'hôpital désordonnée.jpg",
+            pharmacy: "./Image/Pharmacie hospitalière stérile et organisée.jpg",
+            office: "./Image/Bureau du Dr. Aldwyn et corridor hospitalier.jpg",
+            basement: "./Image/Couloir sombre vers la sortie de secours.jpg"
+        };
+
+        let gameState = {
+            room: ROOMS.WAKE_UP,
+            phase: 0,
+            inventory: [],
+            clues: { pillow: false, mirror: false, floor: false, drawer: false, gift: false, garland: false },
+            pharma: { c1: false, c2: false, c3: false, desk: false },
+            pharmaCode: ["", "", ""],
+            lights: [false, false, false, false, false, false, false],
+            codeDigits: ["", "", "", ""],
+            attempts: 0,
+            nurseAlert: false,
+            patientOk: false
+        };
+
+        // DOM elements
+        const gameEl = document.getElementById('game');
+        const inventoryEl = document.getElementById('inventory');
+        const messageEl = document.getElementById('message');
+
+        // Utility functions
+        function typeWriter(element, text, speed, callback) {
+            element.innerHTML = '';
+            let i = 0;
+            const cursor = '<span class="cursor">█</span>';
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML = text.slice(0, i + 1) + cursor;
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    element.innerHTML = text + '<span class="cursor" style="opacity:0">█</span>';
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function flash(msg) {
+            messageEl.textContent = msg;
+            messageEl.classList.remove('hidden');
+            setTimeout(() => messageEl.classList.add('hidden'), 4000);
+        }
+
+        function doEffect(effect, duration) {
+            duration = duration || 400;
+            gameEl.classList.add(effect);
+            setTimeout(() => gameEl.classList.remove(effect), duration);
+        }
+
+        function goToRoom(room, delay) {
+            delay = delay || 1500;
+            doEffect('black', 1800);
+            setTimeout(() => {
+                gameState.room = room;
+                gameState.phase = 0;
+                renderRoom();
+            }, delay);
+        }
+
+        function updateInventory() {
+            const itemsEl = document.getElementById('inventory-items');
+            if (gameState.inventory.length === 0 || 
+                [ROOMS.WAKE_UP, ROOMS.FREEDOM, ROOMS.EXIT].includes(gameState.room)) {
+                inventoryEl.classList.add('hidden');
+                return;
+            }
+            
+            inventoryEl.classList.remove('hidden');
+            itemsEl.innerHTML = '';
+            
+            if (gameState.inventory.includes('note')) {
+                itemsEl.innerHTML += '<div class="inv-i">📜 Note</div>';
+            }
+            if (gameState.inventory.includes('badge')) {
+                itemsEl.innerHTML += '<div class="inv-i">🎫 Badge</div>';
+            }
+            if (gameState.inventory.includes('basement_key')) {
+                itemsEl.innerHTML += '<div class="inv-i">🔑 Clé sous-sol</div>';
+            }
+        }
+
+        function createSceneImage(src, alt, dark) {
+            dark = dark || false;
+            return `
+                <div class="scene-wrap">
+                    <img src="${src}" alt="${alt}" class="scene-img ${dark ? 'scene-dark-img' : ''}" />
+                    <div class="scene-fade ${dark ? 'scene-fade-dark' : ''}"></div>
+                </div>
+            `;
+        }
+
+        // Room renderers
+        function renderWakeUp() {
+            const content = document.createElement('div');
+            content.className = 'scene-black';
+            
+            if (gameState.phase === 0) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), '...', 600, () => {
+                    setTimeout(() => {
+                        gameState.phase = 1;
+                        renderRoom();
+                    }, 2500);
+                });
+            } else if (gameState.phase === 1) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Tu ouvres les yeux.', 110, () => {
+                    setTimeout(() => {
+                        gameState.phase = 2;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 2) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'La lumière est aveuglante. Blanche. Partout.', 75, () => {
+                    setTimeout(() => {
+                        gameState.phase = 3;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 3) {
+                content.innerHTML = '<div class="mid glitch-text"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), "Ce n'est pas la forêt.", 100, () => {
+                    doEffect('glitch', 500);
+                    setTimeout(() => {
+                        gameState.phase = 4;
+                        renderRoom();
+                    }, 3500);
+                });
+            } else if (gameState.phase === 4) {
+                content.innerHTML = '<div class="mid red-text"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), "Ça n'a jamais été la forêt.", 100, () => {
+                    doEffect('glitch', 600);
+                    setTimeout(() => {
+                        gameState.phase = 5;
+                        renderRoom();
+                    }, 4000);
+                });
+            } else if (gameState.phase === 5) {
+                content.innerHTML = `
+                    <div class="mid fadein">
+                        <div class="wake-img-wrap">
+                            <img src="${IMAGES.room21}" alt="Chambre" class="wake-img"/>
+                        </div>
+                        <p class="wt wt1">Tu es allongé dans un lit blanc.</p>
+                        <p class="wt wt2">Les draps sentent le désinfectant.</p>
+                        <p class="wt wt3">Des guirlandes d'anniversaire pendent du plafond. Défraîchies. Oubliées.</p>
+                        <p class="wt wt4">Tu es dans un hôpital.</p>
+                        <button class="btn-main btn-appear" onclick="goToRoom('room')">Se lever</button>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+            }
+        }
+
+        function renderRoom() {
+            switch (gameState.room) {
+                case ROOMS.WAKE_UP:
+                    renderWakeUp();
+                    break;
+                case ROOMS.ROOM:
+                    renderRoom21();
+                    break;
+                case ROOMS.ALDWYN:
+                    renderAldwyn();
+                    break;
+                case ROOMS.CORRIDOR_1:
+                    renderCorridor1();
+                    break;
+                case ROOMS.PATIENT_ROOM:
+                    renderPatient();
+                    break;
+                case ROOMS.PHARMACY:
+                    renderPharmacy();
+                    break;
+                case ROOMS.CORRIDOR_2:
+                    renderCorridor2();
+                    break;
+                case ROOMS.OFFICE:
+                    renderOffice();
+                    break;
+                case ROOMS.BASEMENT:
+                    renderBasement();
+                    break;
+                case ROOMS.EXIT:
+                    renderExit();
+                    break;
+                case ROOMS.FREEDOM:
+                    renderFreedom();
+                    break;
+            }
+            updateInventory();
+        }
+
+        function renderRoom21() {
+            const clueCount = Object.values(gameState.clues).filter(Boolean).length;
+            const content = `
+                <div class="scene-white">
+                    <div class="hdr">
+                        <h2>CHAMBRE 21</h2>
+                        <p class="sub">Unité de soins fermée — Niveau 3</p>
+                    </div>
+                    ${createSceneImage(IMAGES.room21, 'Chambre 21')}
+                    <div class="content">
+                        <p>La chambre est petite. Tout est blanc. Des guirlandes décrochées pendent le long des murs. Des cadeaux décolorés traînent sur la table — jamais ouverts.</p>
+                        <p>Un lit. Une table de nuit. Un miroir. Des affaires éparpillées. Une porte avec un <strong>digicode à 4 chiffres</strong>.</p>
+                        <p class="hint">Le code est caché dans cette chambre. Mais tout ce que tu trouves n'est pas forcément utile.</p>
+                        <div class="grid4">
+                            <div class="card ${gameState.clues.pillow ? 'card-found' : ''}" onclick="foundClue('pillow', &quot;Une carte d'anniversaire froissée sous l'oreiller. Sept bougies dessinées — une seule est allumée.&quot;)">
+                                <span class="card-ico">🛏️</span><span>L'oreiller</span>
+                            </div>
+                            <div class="card ${gameState.clues.mirror ? 'card-found' : ''}" onclick="foundClue('mirror', 'Quelque chose est gravé à l\\'envers dans la buée du miroir : Ɛ', true)">
+                                <span class="card-ico">🪞</span><span>Le miroir</span>
+                            </div>
+                            <div class="card ${gameState.clues.floor ? 'card-found' : ''}" onclick="foundClue('floor', 'Dessiné à la craie sous le lit : un cercle parfait. Rien dedans. Le chiffre du vide.')">
+                                <span class="card-ico">🔍</span><span>Sous le lit</span>
+                            </div>
+                            <div class="card ${gameState.clues.drawer ? 'card-found' : ''}" onclick="foundClue('drawer', 'Un origami dans le tiroir — un cygne. Sa silhouette te rappelle un chiffre.')">
+                                <span class="card-ico">🗄️</span><span>La table de nuit</span>
+                            </div>
+                            <div class="card ${gameState.clues.gift ? 'card-found' : ''}" onclick="foundClue('gift', 'Un emballage défraîchi. \\'JOYEUX ANNIVERSAIRE\\' imprimé en doré. Rien à l\\'intérieur.')">
+                                <span class="card-ico">🎁</span><span>Le cadeau</span>
+                            </div>
+                            <div class="card ${gameState.clues.garland ? 'card-found' : ''}" onclick="foundClue('garland', 'Des lettres manquantes sur la guirlande : _O_ A__I_ER_AI_E. Le nombre 21 imprimé en gros.')">
+                                <span class="card-ico">🎊</span><span>La guirlande</span>
+                            </div>
+                        </div>
+                        ${clueCount >= 2 ? `
+                            <div class="panel-dark">
+                                <p class="green">DIGICODE</p>
+                                <div class="digits">
+                                    <input type="text" maxlength="1" class="digit" data-index="0" value="${gameState.codeDigits[0]}" onkeyup="updateDigit(this)">
+                                    <input type="text" maxlength="1" class="digit" data-index="1" value="${gameState.codeDigits[1]}" onkeyup="updateDigit(this)">
+                                    <input type="text" maxlength="1" class="digit" data-index="2" value="${gameState.codeDigits[2]}" onkeyup="updateDigit(this)">
+                                    <input type="text" maxlength="1" class="digit" data-index="3" value="${gameState.codeDigits[3]}" onkeyup="updateDigit(this)">
+                                </div>
+                                <button class="btn-green" onclick="checkCode()">Ouvrir</button>
+                                ${gameState.attempts > 2 && gameState.attempts <= 5 ? '<p class="hint-sm">Chaque objet cache un chiffre. Pas tous les objets sont utiles.</p>' : ''}
+                                ${gameState.attempts > 5 ? '<p class="hint-sm">Bougies, reflet inversé, vide, cygne... dans cet ordre.</p>' : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        function foundClue(clue, message, glitch) {
+            gameState.clues[clue] = true;
+            if (glitch) doEffect('glitch');
+            flash(message);
+            renderRoom();
+        }
+
+        function updateDigit(input) {
+            const index = parseInt(input.dataset.index);
+            gameState.codeDigits[index] = input.value;
+        }
+
+        function checkCode() {
+            const code = gameState.codeDigits.join('');
+            if (code === '7302') {
+                goToRoom(ROOMS.ALDWYN);
+            } else {
+                doEffect('shake');
+                flash('❌ Mauvais code.');
+                gameState.attempts++;
+                renderRoom();
+            }
+        }
+
+        function renderAldwyn() {
+            const content = document.createElement('div');
+            content.className = 'scene-white';
+            
+            if (gameState.phase === 0) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'La porte s\'ouvre. Un homme se tient devant toi.', 75, () => {
+                    setTimeout(() => {
+                        gameState.phase = 1;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 1) {
+                content.innerHTML = `
+                    <div class="fadein" style="max-width:700px;margin:0 auto;padding:20px">
+                        ${createSceneImage(IMAGES.aldwyn, 'Dr. Aldwyn')}
+                        <div class="center-txt" style="margin-top:20px">
+                            <span id="typewriter"></span>
+                        </div>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Grand. Barbe longue, rousse et blanche. Cheveux aux épaules. Lunettes rondes. Blouse blanche.', 60, () => {
+                    setTimeout(() => {
+                        gameState.phase = 2;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 2) {
+                content.innerHTML = '<div class="fadein center-txt" style="padding:30px"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), '— Bonjour. Tu es enfin réveillé. Je suis le Docteur Aldwyn. Je te suis depuis le début.', 65, () => {
+                    setTimeout(() => {
+                        gameState.phase = 3;
+                        renderRoom();
+                    }, 3500);
+                });
+            } else if (gameState.phase === 3) {
+                content.innerHTML = `
+                    <div class="fadein center-txt" style="padding:30px">
+                        <p style="font-style:italic">— La forêt. Les énigmes. Les sentiers. Les murmures.</p>
+                        <span id="typewriter"></span>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Tout ça, c\'était dans ta tête. Tu es ici depuis... un moment.', 70, () => {
+                    setTimeout(() => {
+                        gameState.phase = 4;
+                        renderRoom();
+                    }, 4000);
+                });
+            } else if (gameState.phase === 4) {
+                content.innerHTML = `
+                    <div class="fadein center-txt" style="padding:30px">
+                        <p style="font-style:italic">— Le renard, c'était moi. Je venais vérifier si tu te réveillais.</p>
+                        <p style="font-style:italic">— La malle... c'était ton esprit qui essayait de revenir.</p>
+                        <span id="typewriter"></span>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), '— Et tu as réussi. Tu es là. Mais maintenant...', 70, () => {
+                    setTimeout(() => {
+                        gameState.phase = 5;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 5) {
+                content.innerHTML = `
+                    <div class="fadein center-txt" style="padding:30px">
+                        <p style="color:#c00;font-weight:bold;font-size:1.2em">— ...il faut que tu sortes d'ici.</p>
+                        <p style="color:#888;font-size:0.9em;margin-top:15px">Il se penche vers toi :</p>
+                        <div class="note-box" style="margin-top:10px">"Tout le monde ici ne veut pas que tu partes. Fais attention."</div>
+                        <button class="btn-main" style="margin-top:25px" onclick="goToRoom('corridor_1')">Sortir dans le couloir</button>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+            }
+        }
+
+        function renderCorridor1() {
+            const content = `
+                <div class="scene-white">
+                    <div class="hdr">
+                        <h2>COULOIR — AILE EST</h2>
+                        <p class="sub">Les néons grésillent. L'odeur de javel est écrasante.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.corridor, 'Couloir')}
+                    <div class="content">
+                        <p>Un long couloir blanc. Trois portes. Au bout, un poste d'infirmières — une silhouette derrière la vitre.</p>
+                        ${gameState.nurseAlert ? '<p class="alert">⚠️ L\'infirmière t\'a repéré. Dépêche-toi.</p>' : ''}
+                        <div class="doors">
+                            <div class="door-card" onclick="goToRoom('patient_room')">
+                                <span class="door-n">13</span>
+                                <span class="door-l">Chambre patient</span>
+                                <span class="door-d">Des murmures derrière la porte.</span>
+                            </div>
+                            <div class="door-card ${!gameState.inventory.includes('badge') ? 'door-locked' : ''}" onclick="tryWestWing()">
+                                <span class="door-n">🔒</span>
+                                <span class="door-l">Aile Ouest</span>
+                                <span class="door-d">${gameState.inventory.includes('badge') ? 'Badge détecté.' : 'Accès restreint — badge requis.'}</span>
+                            </div>
+                            <div class="door-card" onclick="goToRoom('pharmacy')">
+                                <span class="door-n">💊</span>
+                                <span class="door-l">Pharmacie</span>
+                                <span class="door-d">La porte est entrouverte.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        function tryWestWing() {
+            if (gameState.inventory.includes('badge')) {
+                goToRoom(ROOMS.CORRIDOR_2);
+            } else {
+                doEffect('shake');
+                flash('🔒 Badge requis.');
+                gameState.nurseAlert = true;
+                renderRoom();
+            }
+        }
+
+        function renderPatient() {
+            let content = `
+                <div class="scene-white">
+                    <div class="hdr">
+                        <h2>CHAMBRE 13</h2>
+                        <p class="sub">La chambre d'un autre patient.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.patient13, 'Patient 13')}
+                    <div class="content">
+            `;
+            
+            if (gameState.phase === 0) {
+                content += `
+                    <p>Un homme face au mur, il se balance. Des dizaines d'arbres dessinés sur les murs. Au milieu — un renard avec des lunettes.</p>
+                    <div class="dialog">
+                        <p class="mumble">"La forêt... elle me parle aussi... tu l'entends ?"</p>
+                        <button class="btn-choice" onclick="patientChoice(true)">"Oui, je l'entends."</button>
+                        <button class="btn-choice btn-wrong" onclick="patientChoice(false)">"Non, ce n'est pas réel."</button>
+                    </div>
+                `;
+            } else if (gameState.phase === 1) {
+                content += `
+                    <p>Il se retourne. Un sourire soulagé.</p>
+                    <p class="mumble">"Le renard m'a dit que quelqu'un viendrait. Il m'a donné ça. Pour toi."</p>
+                    <div class="note-box">
+                        <p>"Pour ouvrir la porte qui ne s'ouvre pas,</p>
+                        <p>cherche ce que tout le monde jette.</p>
+                        <p>La poubelle de la pharmacie."</p>
+                    </div>
+                    <button class="btn-choice" onclick="takeNote()">Prendre la note</button>
+                `;
+            } else if (gameState.phase === 2) {
+                content += '<div class="center-txt"><p style="color:#888">Il ne te parle plus.</p>';
+            } else if (gameState.phase === 3) {
+                content += '<p>Il fredonne face au mur.</p>';
+            }
+            
+            if (gameState.phase >= 2) {
+                content += '<button class="btn-back" onclick="goToRoom(\'corridor_1\')">← Retour</button>';
+            }
+            
+            content += '</div></div></div>';
+            gameEl.innerHTML = content;
+        }
+
+        function patientChoice(good) {
+            if (good) {
+                gameState.patientOk = true;
+                gameState.phase = 1;
+            } else {
+                flash('"Alors tu es comme les autres." Il se remet face au mur.');
+                gameState.phase = 2;
+            }
+            renderRoom();
+        }
+
+        function takeNote() {
+            gameState.phase = 3;
+            gameState.inventory.push('note');
+            flash('📜 Note ajoutée.');
+            renderRoom();
+        }
+
+        function renderPharmacy() {
+            const content = `
+                <div class="scene-white">
+                    <div class="hdr">
+                        <h2>PHARMACIE</h2>
+                        <p class="sub">L'alcool chirurgical. Les flacons. Le froid.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.pharmacy, 'Pharmacie')}
+                    <div class="content">
+                        <div class="grid4">
+                            <div class="card ${gameState.pharma.c1 ? 'card-found' : ''}" onclick="searchPharma('c1', &quot;Flacons numérotés. Rangée 1, étagère 4, case 8 — vide. Quelqu'un a pris quelque chose.&quot;)">
+                                <span class="card-ico">🗄️</span><span>Armoire 1</span>
+                            </div>
+                            <div class="card ${gameState.pharma.c2 ? 'card-found' : ''}" onclick="searchPharma('c2', 'Ton nom. Admis il y a 21 jours. État dissociatif. Protocole de sortie n°148-B.', true)">
+                                <span class="card-ico">📁</span><span>Dossier Confidentiel</span>
+                            </div>
+                            <div class="card ${gameState.pharma.c3 ? 'card-found' : ''}" onclick="searchPharma('c3', 'Seringues, compresses. Sur une étiquette : LOT-841. Rien d\\'utile.')">
+                                <span class="card-ico">💉</span><span>Armoire 3</span>
+                            </div>
+                            <div class="card ${gameState.pharma.desk ? 'card-found' : ''}" onclick="searchPharma('desk', 'Horaires de garde. Changement à 3h00 — dans 20 min.')">
+                                <span class="card-ico">📋</span><span>Le bureau</span>
+                            </div>
+                        </div>
+                        ${gameState.inventory.includes('note') && !gameState.inventory.includes('badge') ? `
+                            <div class="card-special" onclick="openTrash()">
+                                <span class="card-ico">🗑️</span><span>La poubelle</span><span class="glow">✨</span>
+                            </div>
+                            ${gameState.phase === 1 ? `
+                                <div class="panel-dark" style="margin-top:15px">
+                                    <p class="green">BOÎTE VERROUILLÉE — CODE À 3 CHIFFRES</p>
+                                    <p class="puzzle-hint">Trouvée dans la poubelle. Un cadenas à combinaison.</p>
+                                    <div class="digits" style="margin-top:10px">
+                                        <input type="text" maxlength="1" class="digit" data-index="0" value="${gameState.pharmaCode[0]}" onkeyup="updatePharmaDigit(this)">
+                                        <input type="text" maxlength="1" class="digit" data-index="1" value="${gameState.pharmaCode[1]}" onkeyup="updatePharmaDigit(this)">
+                                        <input type="text" maxlength="1" class="digit" data-index="2" value="${gameState.pharmaCode[2]}" onkeyup="updatePharmaDigit(this)">
+                                    </div>
+                                    <button class="btn-green" style="margin-top:10px" onclick="checkPharmaCode()">Ouvrir</button>
+                                    <p class="puzzle-hint">Le code est quelque part dans cette pièce...</p>
+                                </div>
+                            ` : ''}
+                        ` : ''}
+                        ${gameState.inventory.includes('badge') ? '<p class="hint-sm">Badge trouvé. Retourne dans le couloir.</p>' : ''}
+                        ${!gameState.inventory.includes('note') ? '<p class="hint-sm">La poubelle est là... mais tu ne sais pas quoi y chercher.</p>' : ''}
+                        <button class="btn-back" onclick="goToRoom('corridor_1')">← Retour</button>
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        function searchPharma(area, message, glitch) {
+            gameState.pharma[area] = true;
+            if (glitch) doEffect('glitch');
+            flash(message);
+            renderRoom();
+        }
+
+        function openTrash() {
+            if (gameState.phase !== 1) {
+                gameState.phase = 1;
+                flash('📦 Une boîte avec un cadenas à 3 chiffres...');
+                renderRoom();
+            }
+        }
+
+        function updatePharmaDigit(input) {
+            const index = parseInt(input.dataset.index);
+            gameState.pharmaCode[index] = input.value;
+        }
+
+        function checkPharmaCode() {
+            const code = gameState.pharmaCode.join('');
+            if (code === '148') {
+                gameState.inventory.push('badge');
+                flash('🎫 Badge d\'accès trouvé dans la boîte !');
+                doEffect('glitch');
+                gameState.phase = 2;
+                renderRoom();
+            } else {
+                doEffect('shake');
+                flash('❌ Mauvaise combinaison.');
+            }
+        }
+
+        function renderCorridor2() {
+            const content = `
+                <div class="scene-grey">
+                    <div class="hdr">
+                        <h2>COULOIR — AILE OUEST</h2>
+                        <p class="sub">Néons mourants. L'aile semble abandonnée.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.corridor, 'Couloir sombre', true)}
+                    <div class="content">
+                        <div class="doors">
+                            <div class="door-card" onclick="goToRoom('office')">
+                                <span class="door-n">🔑</span>
+                                <span class="door-l">Bureau du Dr. Aldwyn</span>
+                                <span class="door-d">La porte est ouverte.</span>
+                            </div>
+                            <div class="door-card ${!gameState.inventory.includes('basement_key') ? 'door-locked' : ''}" onclick="tryBasement()">
+                                <span class="door-n">⬇️</span>
+                                <span class="door-l">Sous-sol</span>
+                                <span class="door-d">${gameState.inventory.includes('basement_key') ? 'La clé tourne...' : 'Verrouillé.'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        function tryBasement() {
+            if (gameState.inventory.includes('basement_key')) {
+                goToRoom(ROOMS.BASEMENT);
+            } else {
+                doEffect('shake');
+                flash('🔒 Serrure rouillée. Il faut une clé.');
+            }
+        }
+
+        function renderOffice() {
+            let content = `
+                <div class="scene-white">
+                    <div class="hdr">
+                        <h2>BUREAU DU DR. ALDWYN</h2>
+                        <p class="sub">Livres, dossiers, et une odeur de pipe froide.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.office, 'Bureau')}
+                    <div class="content">
+            `;
+            
+            if (gameState.phase === 0) {
+                content += `
+                    <p>Bureau vide. Ordinateur allumé. Sur le mur, une photo : Aldwyn jeune avec un renard en peluche. Derrière la photo, au crayon : <em>"Mon premier ami portait mon nom, et moi le sien."</em></p>
+                    <p>Sur le bureau, un bloc-notes avec des lettres griffonnées : <strong>N — Y — W — D — L — A</strong></p>
+                    <div class="panel-dark">
+                        <p class="green">SYSTÈME HOSPITALIER — MOT DE PASSE :</p>
+                        <input type="text" id="password" class="input-dark" placeholder="..." onkeydown="checkPassword(event)">
+                        <p class="puzzle-hint">Six lettres. Un nom. Remets-les dans l'ordre.</p>
+                    </div>
+                `;
+            } else if (gameState.phase === 1) {
+                content += `
+                    <div class="panel-dark">
+                        <p class="green">✅ ACCÈS AUTORISÉ</p>
+                        <div style="color:#bbb;line-height:2;margin-top:10px;font-size:0.85em">
+                            <p>📁 PATIENT — CHAMBRE 21</p>
+                            <p>Date d'admission : 14/03/2025</p>
+                            <p>Admis le jour de ses 21 ans. État dissociatif.</p>
+                            <p>Monde imaginaire : forêt, énigmes, renard.</p>
+                            <p style="color:#ff0;border-top:1px solid #333;padding-top:10px;margin-top:10px">📎 Clé du sous-sol dans le tiroir. Code = année de naissance du patient.</p>
+                        </div>
+                    </div>
+                    <div style="text-align:center;margin-top:20px">
+                        <p>Cadenas à 4 chiffres :</p>
+                        <input type="text" id="year" class="input-light" maxlength="4" placeholder="Année..." onkeydown="checkYear(event)">
+                        <p class="hint-sm">Quel âge avait le patient le jour de son admission ?</p>
+                    </div>
+                `;
+            } else if (gameState.phase === 2) {
+                content += '<p>Tu as la clé.</p><button class="btn-back" onclick="goToRoom(\'corridor_2\')">← Retour</button>';
+            }
+            
+            content += '</div></div>';
+            gameEl.innerHTML = content;
+        }
+
+        function checkPassword(event) {
+            if (event.key === 'Enter') {
+                const password = document.getElementById('password').value.toLowerCase();
+                if (password === 'aldwyn') {
+                    gameState.phase = 1;
+                    doEffect('glitch');
+                    renderRoom();
+                } else {
+                    doEffect('shake');
+                    flash('❌ Accès refusé.');
+                    document.getElementById('password').value = '';
+                }
+            }
+        }
+
+        function checkYear(event) {
+            if (event.key === 'Enter') {
+                const year = document.getElementById('year').value;
+                if (year === '2004') {
+                    gameState.inventory.push('basement_key');
+                    flash('🔑 Clé du sous-sol !');
+                    gameState.phase = 2;
+                    renderRoom();
+                } else {
+                    doEffect('shake');
+                    flash('❌ Mauvais code.');
+                    document.getElementById('year').value = '';
+                }
+            }
+        }
+
+        function renderBasement() {
+            const content = `
+                <div class="scene-dark">
+                    <div class="hdr hdr-light">
+                        <h2>SOUS-SOL</h2>
+                        <p class="sub" style="color:#888">L'air est humide. Les murs suintent.</p>
+                    </div>
+                    ${createSceneImage(IMAGES.basement, 'Sous-sol', true)}
+                    <div class="content">
+                        <p style="color:#ccc">Au bout du couloir : <strong>SORTIE DE SECOURS</strong>. 7 interrupteurs sur le mur. Un poème est gravé dans la pierre.</p>
+                        <div class="panel-dark">
+                            <p class="puzzle-hint">"Les extrêmes s'allument, sentinelles éternelles."</p>
+                            <p class="puzzle-hint">"Le cœur reste dans l'ombre."</p>
+                            <p class="puzzle-hint">"Les trois premiers brillent ensemble."</p>
+                            <p class="puzzle-hint">"Le sixième craint la lumière."</p>
+                            <p class="puzzle-hint">"Le cinquième et le troisième ne s'accordent jamais."</p>
+                            <div class="switches">
+                                ${gameState.lights.map((on, i) => `
+                                    <div class="sw ${on ? 'sw-on' : 'sw-off'}" onclick="toggleLight(${i})">
+                                        <span class="sw-n">${i + 1}</span>
+                                        <span class="sw-s">${on ? 'ON' : 'OFF'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button class="btn-green" onclick="checkLights()">Activer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        function toggleLight(index) {
+            gameState.lights[index] = !gameState.lights[index];
+            renderRoom();
+        }
+
+        function checkLights() {
+            // Solution: ON, ON, ON, OFF, OFF, OFF, ON
+            const [a, b, c, d, e, f, g] = gameState.lights;
+            if (a && b && c && !d && !e && !f && g) {
+                goToRoom(ROOMS.EXIT);
+            } else {
+                doEffect('shake');
+                flash('⚡ Mauvaise combinaison.');
+            }
+        }
+
+        function renderExit() {
+            const content = document.createElement('div');
+            content.className = 'scene-black';
+            
+            if (gameState.phase === 0) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'La porte s\'ouvre. L\'air frais te frappe.', 75, () => {
+                    setTimeout(() => {
+                        gameState.phase = 1;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 1) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'La nuit. Des étoiles. Le vent.', 85, () => {
+                    setTimeout(() => {
+                        gameState.phase = 2;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 2) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Tu es dehors.', 110, () => {
+                    setTimeout(() => {
+                        gameState.phase = 3;
+                        renderRoom();
+                    }, 3500);
+                });
+            } else if (gameState.phase === 3) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Derrière toi, l\'hôpital. Devant toi... une forêt.', 75, () => {
+                    setTimeout(() => {
+                        gameState.phase = 4;
+                        renderRoom();
+                    }, 4000);
+                });
+            } else if (gameState.phase === 4) {
+                content.innerHTML = '<div class="mid"><span id="typewriter"></span></div>';
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+                typeWriter(document.getElementById('typewriter'), 'Aldwyn te sourit.', 100, () => {
+                    setTimeout(() => {
+                        gameState.phase = 5;
+                        renderRoom();
+                    }, 3000);
+                });
+            } else if (gameState.phase === 5) {
+                content.innerHTML = `
+                    <div class="mid fadein">
+                        <div style="max-width:350px;margin:0 auto 20px;border-radius:8px;overflow:hidden">
+                            <img src="${IMAGES.aldwyn}" alt="Aldwyn" style="width:100%;height:280px;object-fit:cover;object-position:top;filter:saturate(0.5) brightness(0.85)"/>
+                        </div>
+                        <p class="exit-line el1">"Je savais que tu trouverais la sortie."</p>
+                        <p class="exit-line el2">"La forêt n'était pas un rêve. L'hôpital non plus."</p>
+                        <p class="exit-line el3">"Ce sont deux façons de voir le même chemin."</p>
+                        <p class="exit-line el4">"Et toi, tu as traversé les deux."</p>
+                        <button class="btn-main btn-appear2" onclick="goToRoom('freedom')">Avancer vers la forêt</button>
+                    </div>
+                `;
+                gameEl.innerHTML = '';
+                gameEl.appendChild(content);
+            }
+        }
+
+        function renderFreedom() {
+            const content = `
+                <div class="scene-forest">
+                    <div class="freedom">
+                        <p class="f-sep">═══════════════════════════════════════</p>
+                        <p class="f-line fadein" style="animation-delay: 0.5s">21 énigmes dans la forêt.</p>
+                        <p class="f-line fadein" style="animation-delay: 1s">Un hôpital dont personne ne sort.</p>
+                        <p class="f-line fadein" style="animation-delay: 1.5s">Et toi, tu es là. Debout. Dehors. Libre.</p>
+                        <p class="f-line f-big fadein" style="animation-delay: 2s">Joyeux 21ème anniversaire.</p>
+                        <p class="f-line fadein" style="animation-delay: 2.5s">La forêt, l'hôpital, les énigmes —</p>
+                        <p class="f-line fadein" style="animation-delay: 3s">tout ça pour te dire une chose :</p>
+                        <p class="f-line f-big f-gold fadein" style="animation-delay: 3.5s">Tu es exceptionnel.</p>
+                        <p class="f-line fadein" style="animation-delay: 4s">Et le meilleur ami, frère, cousin que je n'ai jamais eu.</p>
+                        <p class="f-sep" style="animation-delay: 4.5s">═══════════════════════════════════════</p>
+                        <p class="f-line f-sig fadein" style="animation-delay: 5s">— L'Esprit de la Forêt 🌲</p>
+                    </div>
+                </div>
+            `;
+            gameEl.innerHTML = content;
+        }
+
+        // Initialize game
+        renderRoom();
+    </script>
+</body>
+</html>
